@@ -13,6 +13,9 @@ RUN npm ci --only=production
 # Copy server source code
 COPY server/ ./
 
+# Create uploads directory
+RUN mkdir -p src/uploads
+
 # Expose port
 EXPOSE 3000
 
