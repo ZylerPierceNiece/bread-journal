@@ -1,28 +1,14 @@
 import express from 'express';
 import multer from 'multer';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { unlinkSync, existsSync } from 'fs';
 import pool from '../config/database.js';
 import { authenticateToken, optionalAuth } from '../middleware/auth.js';
+import { cloudinaryStorage } from '../config/cloudinary.js';
 
 const router = express.Router();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, join(__dirname, '../uploads'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
-  }
-});
-
+// Configure multer to use Cloudinary storage
 const upload = multer({
-  storage: storage,
+  storage: cloudinaryStorage,
   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
@@ -108,9 +94,9 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req, res) 
       return res.status(400).json({ error: 'Name and bake date are required' });
     }
 
-    // Build images array from uploaded files
+    // Build images array from uploaded files (Cloudinary URLs)
     const images = req.files.map((file, index) => ({
-      url: `/uploads/${file.filename}`,
+      url: file.path, // Cloudinary URL
       order: index
     }));
 
@@ -185,20 +171,7 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
     // Use new image if uploaded, otherwise keep existing
     let image_url = existingBread.image_url;
     if (req.file) {
-      image_url = `/uploads/${req.file.filename}`;
-
-      // Delete old image file if it exists locally
-      if (existingBread.image_url.startsWith('/uploads/')) {
-        const oldFilename = existingBread.image_url.replace('/uploads/', '');
-        const oldPath = join(__dirname, '../uploads', oldFilename);
-        if (existsSync(oldPath)) {
-          try {
-            unlinkSync(oldPath);
-          } catch (err) {
-            console.error('Failed to delete old image:', err);
-          }
-        }
-      }
+      image_url = req.file.path; // Cloudinary URL
     }
 
     const result = await pool.query(
@@ -257,19 +230,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'You can only delete your own breads' });
     }
 
-    // Delete image file if it exists locally
-    if (bread.image_url.startsWith('/uploads/')) {
-      const filename = bread.image_url.replace('/uploads/', '');
-      const filePath = join(__dirname, '../uploads', filename);
-      if (existsSync(filePath)) {
-        try {
-          unlinkSync(filePath);
-        } catch (err) {
-          console.error('Failed to delete image file:', err);
-        }
-      }
-    }
-
+    // Images are stored in Cloudinary, no local deletion needed
     await pool.query('DELETE FROM breads WHERE id = $1', [req.params.id]);
     res.json({ message: 'Bread deleted successfully' });
   } catch (error) {
