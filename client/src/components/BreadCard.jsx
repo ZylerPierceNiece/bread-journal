@@ -152,7 +152,15 @@ function BreadCard({ bread, onEdit, onDelete }) {
   return (
     <div className="bread-card">
       <div className="bread-image">
-        <ImageCarousel images={bread.images && bread.images.length > 0 ? bread.images : [{ url: bread.image_url, order: 0 }]} />
+        <ImageCarousel
+          images={
+            bread.images && Array.isArray(bread.images) && bread.images.length > 0
+              ? bread.images
+              : bread.image_url
+                ? [{ url: bread.image_url, order: 0 }]
+                : []
+          }
+        />
       </div>
 
       <div className="bread-content">

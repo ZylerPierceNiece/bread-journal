@@ -4,7 +4,11 @@ function ImageCarousel({ images }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Handle single image or array
-  const imageArray = Array.isArray(images) ? images : [{ url: images, order: 0 }];
+  const imageArray = Array.isArray(images) && images.length > 0
+    ? images
+    : images && typeof images === 'string'
+      ? [{ url: images, order: 0 }]
+      : [];
 
   const goToNext = () => {
     setCurrentIndex((prevIndex) =>
@@ -24,6 +28,11 @@ function ImageCarousel({ images }) {
 
   // Only show carousel controls if there are multiple images
   const showControls = imageArray.length > 1;
+
+  // Don't render if no images
+  if (imageArray.length === 0) {
+    return null;
+  }
 
   return (
     <div className="image-carousel">
