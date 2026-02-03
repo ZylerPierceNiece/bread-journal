@@ -5,6 +5,7 @@ import { useToast } from '../components/Toast/ToastContext';
 import Navbar from '../components/Navbar';
 import BreadCard from '../components/BreadCard';
 import EditProfileModal from '../components/EditProfileModal';
+import EditBreadModal from '../components/EditBreadModal';
 import FollowersModal from '../components/FollowersModal';
 import UserAvatar from '../components/UserAvatar';
 
@@ -18,6 +19,7 @@ function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
+  const [editingBread, setEditingBread] = useState(null);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [followersModalType, setFollowersModalType] = useState(null);
 
@@ -93,6 +95,15 @@ function ProfilePage() {
     } finally {
       setFollowLoading(false);
     }
+  };
+
+  const handleEdit = (bread) => {
+    setEditingBread(bread);
+  };
+
+  const handleBreadUpdate = (updatedBread) => {
+    setBreads(prev => prev.map(b => b.id === updatedBread.id ? updatedBread : b));
+    setEditingBread(null);
   };
 
   const handleDelete = async (breadId) => {
@@ -208,7 +219,7 @@ function ProfilePage() {
                 <BreadCard
                   key={bread.id}
                   bread={bread}
-                  onEdit={null}
+                  onEdit={isOwnProfile ? handleEdit : null}
                   onDelete={isOwnProfile ? handleDelete : null}
                 />
               ))}
@@ -230,6 +241,14 @@ function ProfilePage() {
           userId={id}
           type={followersModalType}
           onClose={() => setShowFollowersModal(false)}
+        />
+      )}
+
+      {editingBread && (
+        <EditBreadModal
+          bread={editingBread}
+          onClose={() => setEditingBread(null)}
+          onUpdate={handleBreadUpdate}
         />
       )}
     </>

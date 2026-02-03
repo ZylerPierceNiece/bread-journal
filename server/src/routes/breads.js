@@ -136,7 +136,7 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req, res) 
 });
 
 // PUT update bread
-router.put('/:id', authenticateToken, upload.single('image'), async (req, res) => {
+router.put('/:id', authenticateToken, upload.array('images', 5), async (req, res) => {
   try {
     // Check if bread exists and belongs to user
     const existingResult = await pool.query(
@@ -168,10 +168,17 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
       privacy
     } = req.body;
 
-    // Use new image if uploaded, otherwise keep existing
+    // Use new images if uploaded, otherwise keep existing
     let image_url = existingBread.image_url;
-    if (req.file) {
-      image_url = req.file.path; // Cloudinary URL
+    let images = existingBread.images;
+
+    if (req.files && req.files.length > 0) {
+      // Build images array from uploaded files (Cloudinary URLs)
+      images = req.files.map((file, index) => ({
+        url: file.path,
+        order: index
+      }));
+      image_url = images[0].url; // Update image_url for backwards compatibility
     }
 
     const result = await pool.query(
@@ -179,22 +186,24 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
         name = $1,
         bread_type = $2,
         image_url = $3,
-        bake_date = $4,
-        crust_rating = $5,
-        crumb_rating = $6,
-        taste_rating = $7,
-        texture_rating = $8,
-        appearance_rating = $9,
-        notes = $10,
-        recipe_notes = $11,
-        privacy = $12,
+        images = $4,
+        bake_date = $5,
+        crust_rating = $6,
+        crumb_rating = $7,
+        taste_rating = $8,
+        texture_rating = $9,
+        appearance_rating = $10,
+        notes = $11,
+        recipe_notes = $12,
+        privacy = $13,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $13
+      WHERE id = $14
       RETURNING *`,
       [
         name || existingBread.name,
         bread_type !== undefined ? bread_type : existingBread.bread_type,
         image_url,
+        JSON.stringify(images),
         bake_date || existingBread.bake_date,
         crust_rating !== undefined ? parseInt(crust_rating) : existingBread.crust_rating,
         crumb_rating !== undefined ? parseInt(crumb_rating) : existingBread.crumb_rating,
