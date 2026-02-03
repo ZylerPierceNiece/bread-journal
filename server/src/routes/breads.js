@@ -129,10 +129,10 @@ router.get('/user/:userId', optionalAuth, async (req, res) => {
 });
 
 // POST new bread
-router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
+router.post('/', authenticateToken, upload.array('images', 5), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Image is required' });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'At least one image is required' });
     }
 
     const {
@@ -153,21 +153,28 @@ router.post('/', authenticateToken, upload.single('image'), async (req, res) => 
       return res.status(400).json({ error: 'Name and bake date are required' });
     }
 
-    // Store as /uploads/filename for now (will be URL with Cloudinary later)
-    const image_url = `/uploads/${req.file.filename}`;
+    // Build images array from uploaded files
+    const images = req.files.map((file, index) => ({
+      url: `/uploads/${file.filename}`,
+      order: index
+    }));
+
+    // Keep first image as image_url for backwards compatibility
+    const image_url = images[0].url;
 
     const result = await pool.query(
       `INSERT INTO breads (
-        user_id, name, bread_type, image_url, bake_date,
+        user_id, name, bread_type, image_url, images, bake_date,
         crust_rating, crumb_rating, taste_rating, texture_rating, appearance_rating,
         notes, recipe_notes, privacy
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *`,
       [
         req.user.userId,
         name,
         bread_type || null,
         image_url,
+        JSON.stringify(images),
         bake_date,
         crust_rating ? parseInt(crust_rating) : null,
         crumb_rating ? parseInt(crumb_rating) : null,

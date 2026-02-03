@@ -28,11 +28,21 @@ pool.query('SELECT NOW()', (err, res) => {
 // Initialize database with migrations
 export async function initializeDatabase() {
   try {
-    const migrationSQL = readFileSync(
-      join(__dirname, '../migrations/001_create_tables.sql'),
-      'utf-8'
-    );
-    await pool.query(migrationSQL);
+    // Run migrations in order
+    const migrations = [
+      '001_create_tables.sql',
+      '002_add_multiple_images.sql'
+    ];
+
+    for (const migration of migrations) {
+      const migrationSQL = readFileSync(
+        join(__dirname, `../migrations/${migration}`),
+        'utf-8'
+      );
+      await pool.query(migrationSQL);
+      console.log(`✓ Migration ${migration} completed`);
+    }
+
     console.log('✓ Database tables initialized');
   } catch (error) {
     console.error('Error initializing database:', error.message);
