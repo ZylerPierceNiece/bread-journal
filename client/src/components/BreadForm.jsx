@@ -18,9 +18,13 @@ function BreadForm({ onSubmit, onCancel, initialData = null }) {
     privacy: initialData?.privacy || 'followers'
   });
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(
-    initialData?.image_url || null
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState(
+    initialData?.images && initialData.images.length > 0
+      ? initialData.images.map(img => img.url)
+      : initialData?.image_url
+        ? [initialData.image_url]
+        : []
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,22 +38,33 @@ function BreadForm({ onSubmit, onCancel, initialData = null }) {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files);
+    if (files.length > 5) {
+      toast.error('You can only upload up to 5 images');
+      return;
     }
+
+    setImageFiles(files);
+
+    // Generate previews for all selected files
+    const previewPromises = files.map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(previewPromises).then(previews => {
+      setImagePreviews(previews);
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!initialData && !imageFile) {
-      toast.error('Please select an image');
+    if (!initialData && imageFiles.length === 0) {
+      toast.error('Please select at least one image');
       return;
     }
 
@@ -60,8 +75,10 @@ function BreadForm({ onSubmit, onCancel, initialData = null }) {
       submitData.append(key, formData[key]);
     });
 
-    if (imageFile) {
-      submitData.append('image', imageFile);
+    if (imageFiles.length > 0) {
+      imageFiles.forEach(file => {
+        submitData.append('images', file);
+      });
     }
 
     try {
@@ -81,8 +98,8 @@ function BreadForm({ onSubmit, onCancel, initialData = null }) {
           recipe_notes: '',
           privacy: 'followers'
         });
-        setImageFile(null);
-        setImagePreview(null);
+        setImageFiles([]);
+        setImagePreviews([]);
       }
     } catch (error) {
       toast.error('Error submitting form: ' + error.message);
@@ -147,16 +164,21 @@ function BreadForm({ onSubmit, onCancel, initialData = null }) {
       </div>
 
       <div className="form-group">
-        <label htmlFor="image">Bread Image {!initialData && '*'}</label>
+        <label htmlFor="image">Bread Images (up to 5) {!initialData && '*'}</label>
         <input
           type="file"
           id="image"
           accept="image/*"
+          multiple
           onChange={handleImageChange}
         />
-        {imagePreview && (
-          <div className="image-preview">
-            <img src={imagePreview} alt="Preview" />
+        {imagePreviews.length > 0 && (
+          <div className="image-previews">
+            {imagePreviews.map((preview, index) => (
+              <div key={index} className="image-preview">
+                <img src={preview} alt={`Preview ${index + 1}`} />
+              </div>
+            ))}
           </div>
         )}
       </div>

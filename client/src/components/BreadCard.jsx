@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './Auth/AuthContext';
 import UserAvatar from './UserAvatar';
 import WhoLikedModal from './WhoLikedModal';
+import ImageCarousel from './ImageCarousel';
 
 function BreadCard({ bread, onEdit, onDelete }) {
   const { user } = useAuth();
@@ -151,7 +152,7 @@ function BreadCard({ bread, onEdit, onDelete }) {
   return (
     <div className="bread-card">
       <div className="bread-image">
-        <img src={bread.image_url} alt={bread.name} />
+        <ImageCarousel images={bread.images && bread.images.length > 0 ? bread.images : [{ url: bread.image_url, order: 0 }]} />
       </div>
 
       <div className="bread-content">
