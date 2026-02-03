@@ -2298,3 +2298,53 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(255, 255, 255, 0.9);
 }
 
+
+/* Bread Detail Page */
+.bread-detail-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.bread-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-button, .share-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.back-button {
+  background: var(--light-cream);
+  color: var(--dark-text);
+}
+
+.back-button:hover {
+  background: var(--warm-cream);
+}
+
+.share-button {
+  background: var(--primary-brown);
+  color: white;
+}
+
+.share-button:hover {
+  background: var(--golden);
+}
+
+/* Make bread image clickable */
+.bread-card .bread-image {
+  transition: transform 0.2s;
+}
+
+.bread-card .bread-image:hover {
+  transform: scale(1.02);
+}

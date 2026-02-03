@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from './Auth/AuthContext';
 import UserAvatar from './UserAvatar';
 import WhoLikedModal from './WhoLikedModal';
@@ -6,6 +7,7 @@ import ImageCarousel from './ImageCarousel';
 
 function BreadCard({ bread, onEdit, onDelete }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
@@ -149,9 +151,13 @@ function BreadCard({ bread, onEdit, onDelete }) {
     }
   };
 
+  const handleCardClick = () => {
+    navigate(`/bread/${bread.id}`);
+  };
+
   return (
     <div className="bread-card">
-      <div className="bread-image">
+      <div className="bread-image" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
         <ImageCarousel
           images={
             bread.images && Array.isArray(bread.images) && bread.images.length > 0

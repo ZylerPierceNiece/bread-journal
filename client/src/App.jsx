@@ -11,6 +11,7 @@ import FeedPage from './pages/FeedPage';
 import ProfilePage from './pages/ProfilePage';
 import SearchPage from './pages/SearchPage';
 import MessagesPage from './pages/MessagesPage';
+import BreadDetailPage from './pages/BreadDetailPage';
 
 // Protected Route wrapper
 function ProtectedRoute({ children }) {
@@ -115,6 +116,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MessagesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bread/:id"
+              element={
+                <ProtectedRoute>
+                  <BreadDetailPage />
                 </ProtectedRoute>
               }
             />
