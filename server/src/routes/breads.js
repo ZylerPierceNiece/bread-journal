@@ -1,0 +1,319 @@
+import express from 'express';
+import multer from 'multer';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { unlinkSync, existsSync } from 'fs';
+import pool from '../config/database.js';
+import { authenticateToken, optionalAuth } from '../middleware/auth.js';
+
+const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, join(__dirname, '../uploads'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
+// GET all breads (user's own breads)
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM breads WHERE user_id = $1 ORDER BY bake_date DESC, created_at DESC',
+      [req.user.userId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get breads error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET single bread by ID
+router.get('/:id', optionalAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM breads WHERE id = $1', [req.params.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Bread not found' });
+    }
+
+    const bread = result.rows[0];
+
+    // Check if user has permission to view
+    if (bread.privacy === 'private' && (!req.user || req.user.userId !== bread.user_id)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    if (bread.privacy === 'followers' && (!req.user || req.user.userId !== bread.user_id)) {
+      // Check if requester follows the bread owner
+      if (req.user) {
+        const followCheck = await pool.query(
+          'SELECT 1 FROM followers WHERE user_id = $1 AND follower_id = $2',
+          [bread.user_id, req.user.userId]
+        );
+        if (followCheck.rows.length === 0) {
+          return res.status(403).json({ error: 'You must follow this user to view their breads' });
+        }
+      } else {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+    }
+
+    res.json(bread);
+  } catch (error) {
+    console.error('Get bread error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET breads by user ID
+router.get('/user/:userId', optionalAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Build query based on viewer's relationship to the user
+    let query = 'SELECT * FROM breads WHERE user_id = $1';
+    const params = [userId];
+
+    if (!req.user || req.user.userId !== parseInt(userId)) {
+      // Not viewing own profile
+      if (req.user) {
+        // Check if following
+        const followCheck = await pool.query(
+          'SELECT 1 FROM followers WHERE user_id = $1 AND follower_id = $2',
+          [userId, req.user.userId]
+        );
+        if (followCheck.rows.length > 0) {
+          // Follower - show public and followers-only
+          query += " AND privacy IN ('public', 'followers')";
+        } else {
+          // Not following - show only public
+          query += " AND privacy = 'public'";
+        }
+      } else {
+        // Not authenticated - show only public
+        query += " AND privacy = 'public'";
+      }
+    }
+    // If viewing own profile, show all breads
+
+    query += ' ORDER BY bake_date DESC, created_at DESC';
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get user breads error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST new bread
+router.post('/', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Image is required' });
+    }
+
+    const {
+      name,
+      bread_type,
+      bake_date,
+      crust_rating,
+      crumb_rating,
+      taste_rating,
+      texture_rating,
+      appearance_rating,
+      notes,
+      recipe_notes,
+      privacy
+    } = req.body;
+
+    if (!name || !bake_date) {
+      return res.status(400).json({ error: 'Name and bake date are required' });
+    }
+
+    // Store as /uploads/filename for now (will be URL with Cloudinary later)
+    const image_url = `/uploads/${req.file.filename}`;
+
+    const result = await pool.query(
+      `INSERT INTO breads (
+        user_id, name, bread_type, image_url, bake_date,
+        crust_rating, crumb_rating, taste_rating, texture_rating, appearance_rating,
+        notes, recipe_notes, privacy
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING *`,
+      [
+        req.user.userId,
+        name,
+        bread_type || null,
+        image_url,
+        bake_date,
+        crust_rating ? parseInt(crust_rating) : null,
+        crumb_rating ? parseInt(crumb_rating) : null,
+        taste_rating ? parseInt(taste_rating) : null,
+        texture_rating ? parseInt(texture_rating) : null,
+        appearance_rating ? parseInt(appearance_rating) : null,
+        notes || null,
+        recipe_notes || null,
+        privacy || 'followers'
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Create bread error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT update bread
+router.put('/:id', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    // Check if bread exists and belongs to user
+    const existingResult = await pool.query(
+      'SELECT * FROM breads WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (existingResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Bread not found' });
+    }
+
+    const existingBread = existingResult.rows[0];
+
+    if (existingBread.user_id !== req.user.userId) {
+      return res.status(403).json({ error: 'You can only edit your own breads' });
+    }
+
+    const {
+      name,
+      bread_type,
+      bake_date,
+      crust_rating,
+      crumb_rating,
+      taste_rating,
+      texture_rating,
+      appearance_rating,
+      notes,
+      recipe_notes,
+      privacy
+    } = req.body;
+
+    // Use new image if uploaded, otherwise keep existing
+    let image_url = existingBread.image_url;
+    if (req.file) {
+      image_url = `/uploads/${req.file.filename}`;
+
+      // Delete old image file if it exists locally
+      if (existingBread.image_url.startsWith('/uploads/')) {
+        const oldFilename = existingBread.image_url.replace('/uploads/', '');
+        const oldPath = join(__dirname, '../uploads', oldFilename);
+        if (existsSync(oldPath)) {
+          try {
+            unlinkSync(oldPath);
+          } catch (err) {
+            console.error('Failed to delete old image:', err);
+          }
+        }
+      }
+    }
+
+    const result = await pool.query(
+      `UPDATE breads SET
+        name = $1,
+        bread_type = $2,
+        image_url = $3,
+        bake_date = $4,
+        crust_rating = $5,
+        crumb_rating = $6,
+        taste_rating = $7,
+        texture_rating = $8,
+        appearance_rating = $9,
+        notes = $10,
+        recipe_notes = $11,
+        privacy = $12,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $13
+      RETURNING *`,
+      [
+        name || existingBread.name,
+        bread_type !== undefined ? bread_type : existingBread.bread_type,
+        image_url,
+        bake_date || existingBread.bake_date,
+        crust_rating !== undefined ? parseInt(crust_rating) : existingBread.crust_rating,
+        crumb_rating !== undefined ? parseInt(crumb_rating) : existingBread.crumb_rating,
+        taste_rating !== undefined ? parseInt(taste_rating) : existingBread.taste_rating,
+        texture_rating !== undefined ? parseInt(texture_rating) : existingBread.texture_rating,
+        appearance_rating !== undefined ? parseInt(appearance_rating) : existingBread.appearance_rating,
+        notes !== undefined ? notes : existingBread.notes,
+        recipe_notes !== undefined ? recipe_notes : existingBread.recipe_notes,
+        privacy || existingBread.privacy,
+        req.params.id
+      ]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update bread error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE bread
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM breads WHERE id = $1', [req.params.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Bread not found' });
+    }
+
+    const bread = result.rows[0];
+
+    if (bread.user_id !== req.user.userId) {
+      return res.status(403).json({ error: 'You can only delete your own breads' });
+    }
+
+    // Delete image file if it exists locally
+    if (bread.image_url.startsWith('/uploads/')) {
+      const filename = bread.image_url.replace('/uploads/', '');
+      const filePath = join(__dirname, '../uploads', filename);
+      if (existsSync(filePath)) {
+        try {
+          unlinkSync(filePath);
+        } catch (err) {
+          console.error('Failed to delete image file:', err);
+        }
+      }
+    }
+
+    await pool.query('DELETE FROM breads WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Bread deleted successfully' });
+  } catch (error) {
+    console.error('Delete bread error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+export default router;
