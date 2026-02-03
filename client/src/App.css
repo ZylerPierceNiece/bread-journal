@@ -114,6 +114,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
 .form-group input[type="date"],
 .form-group textarea {
   padding: 12px;
@@ -123,6 +125,8 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.3s;
   background: white;
   color: var(--dark-text);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-group input:focus,
