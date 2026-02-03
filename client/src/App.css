@@ -2348,3 +2348,34 @@ h1, h2, h3, h4, h5, h6 {
 .bread-card .bread-image:hover {
   transform: scale(1.02);
 }
+
+/* Export PDF Button */
+.export-pdf-button {
+  padding: 10px 20px;
+  background: var(--golden);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-left: 10px;
+}
+
+.export-pdf-button:hover:not(:disabled) {
+  background: var(--primary-brown);
+  transform: translateY(-2px);
+}
+
+.export-pdf-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Profile Actions Container */
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}

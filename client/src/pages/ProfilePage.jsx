@@ -8,6 +8,7 @@ import EditProfileModal from '../components/EditProfileModal';
 import EditBreadModal from '../components/EditBreadModal';
 import FollowersModal from '../components/FollowersModal';
 import UserAvatar from '../components/UserAvatar';
+import { exportBreadsToPDF } from '../utils/pdfExport';
 
 function ProfilePage() {
   const { id } = useParams();
@@ -132,6 +133,21 @@ function ProfilePage() {
     setProfileUser(prev => ({ ...prev, ...updatedUser }));
   };
 
+  const handleExportPDF = async () => {
+    if (breads.length === 0) {
+      toast.error('No breads to export');
+      return;
+    }
+
+    try {
+      await exportBreadsToPDF(breads, profileUser.display_name || profileUser.username);
+      toast.success('PDF exported successfully!');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export PDF');
+    }
+  };
+
   if (loading || !profileUser) {
     return (
       <>
@@ -180,12 +196,21 @@ function ProfilePage() {
             </div>
 
             {isOwnProfile ? (
-              <button
-                onClick={() => setEditingProfile(true)}
-                className="edit-profile-button"
-              >
-                Edit Profile
-              </button>
+              <div className="profile-actions">
+                <button
+                  onClick={() => setEditingProfile(true)}
+                  className="edit-profile-button"
+                >
+                  Edit Profile
+                </button>
+                <button
+                  onClick={handleExportPDF}
+                  className="export-pdf-button"
+                  disabled={breads.length === 0}
+                >
+                  📄 Export as PDF
+                </button>
+              </div>
             ) : (
               <div className="profile-actions">
                 <button
