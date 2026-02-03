@@ -59,27 +59,6 @@ router.get('/:id', optionalAuth, async (req, res) => {
     }
 
     const bread = result.rows[0];
-
-    // Check if user has permission to view
-    if (bread.privacy === 'private' && (!req.user || req.user.userId !== bread.user_id)) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    if (bread.privacy === 'followers' && (!req.user || req.user.userId !== bread.user_id)) {
-      // Check if requester follows the bread owner
-      if (req.user) {
-        const followCheck = await pool.query(
-          'SELECT 1 FROM followers WHERE user_id = $1 AND follower_id = $2',
-          [bread.user_id, req.user.userId]
-        );
-        if (followCheck.rows.length === 0) {
-          return res.status(403).json({ error: 'You must follow this user to view their breads' });
-        }
-      } else {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-    }
-
     res.json(bread);
   } catch (error) {
     console.error('Get bread error:', error);
@@ -92,33 +71,9 @@ router.get('/user/:userId', optionalAuth, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Build query based on viewer's relationship to the user
-    let query = 'SELECT * FROM breads WHERE user_id = $1';
+    // All breads are public now - show all for any user
+    const query = 'SELECT * FROM breads WHERE user_id = $1 ORDER BY bake_date DESC, created_at DESC';
     const params = [userId];
-
-    if (!req.user || req.user.userId !== parseInt(userId)) {
-      // Not viewing own profile
-      if (req.user) {
-        // Check if following
-        const followCheck = await pool.query(
-          'SELECT 1 FROM followers WHERE user_id = $1 AND follower_id = $2',
-          [userId, req.user.userId]
-        );
-        if (followCheck.rows.length > 0) {
-          // Follower - show public and followers-only
-          query += " AND privacy IN ('public', 'followers')";
-        } else {
-          // Not following - show only public
-          query += " AND privacy = 'public'";
-        }
-      } else {
-        // Not authenticated - show only public
-        query += " AND privacy = 'public'";
-      }
-    }
-    // If viewing own profile, show all breads
-
-    query += ' ORDER BY bake_date DESC, created_at DESC';
 
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -183,7 +138,7 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req, res) 
         appearance_rating ? parseInt(appearance_rating) : null,
         notes || null,
         recipe_notes || null,
-        privacy || 'followers'
+        'public'
       ]
     );
 
@@ -275,7 +230,7 @@ router.put('/:id', authenticateToken, upload.single('image'), async (req, res) =
         appearance_rating !== undefined ? parseInt(appearance_rating) : existingBread.appearance_rating,
         notes !== undefined ? notes : existingBread.notes,
         recipe_notes !== undefined ? recipe_notes : existingBread.recipe_notes,
-        privacy || existingBread.privacy,
+        'public',
         req.params.id
       ]
     );

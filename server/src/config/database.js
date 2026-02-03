@@ -31,7 +31,8 @@ export async function initializeDatabase() {
     // Run migrations in order
     const migrations = [
       '001_create_tables.sql',
-      '002_add_multiple_images.sql'
+      '002_add_multiple_images.sql',
+      '003_make_all_public.sql'
     ];
 
     for (const migration of migrations) {

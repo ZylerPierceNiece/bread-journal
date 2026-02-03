@@ -14,8 +14,7 @@ function BreadForm({ onSubmit, onCancel, initialData = null }) {
     texture_rating: initialData?.texture_rating || 5,
     appearance_rating: initialData?.appearance_rating || 5,
     notes: initialData?.notes || '',
-    recipe_notes: initialData?.recipe_notes || '',
-    privacy: initialData?.privacy || 'followers'
+    recipe_notes: initialData?.recipe_notes || ''
   });
 
   const [imageFiles, setImageFiles] = useState([]);
@@ -95,8 +94,7 @@ function BreadForm({ onSubmit, onCancel, initialData = null }) {
           texture_rating: 5,
           appearance_rating: 5,
           notes: '',
-          recipe_notes: '',
-          privacy: 'followers'
+          recipe_notes: ''
         });
         setImageFiles([]);
         setImagePreviews([]);
@@ -147,20 +145,6 @@ function BreadForm({ onSubmit, onCancel, initialData = null }) {
           onChange={handleInputChange}
           required
         />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="privacy">Privacy</label>
-        <select
-          id="privacy"
-          name="privacy"
-          value={formData.privacy}
-          onChange={handleInputChange}
-        >
-          <option value="public">Public - Anyone can see</option>
-          <option value="followers">Followers Only - Only people who follow you</option>
-          <option value="private">Private - Only you</option>
-        </select>
       </div>
 
       <div className="form-group">
