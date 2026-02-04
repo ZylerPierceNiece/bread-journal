@@ -196,21 +196,12 @@ function ProfilePage() {
             </div>
 
             {isOwnProfile ? (
-              <div className="profile-actions">
-                <button
-                  onClick={() => setEditingProfile(true)}
-                  className="edit-profile-button"
-                >
-                  Edit Profile
-                </button>
-                <button
-                  onClick={handleExportPDF}
-                  className="export-pdf-button"
-                  disabled={breads.length === 0}
-                >
-                  📄 Export as PDF
-                </button>
-              </div>
+              <button
+                onClick={() => setEditingProfile(true)}
+                className="edit-profile-button"
+              >
+                Edit Profile
+              </button>
             ) : (
               <div className="profile-actions">
                 <button
@@ -232,7 +223,18 @@ function ProfilePage() {
         </div>
 
         <div className="profile-breads">
-          <h2>{isOwnProfile ? 'My Breads' : `${profileUser.display_name || profileUser.username}'s Breads`}</h2>
+          <div className="breads-header">
+            <h2>{isOwnProfile ? 'My Breads' : `${profileUser.display_name || profileUser.username}'s Breads`}</h2>
+            {isOwnProfile && breads.length > 0 && (
+              <button
+                onClick={handleExportPDF}
+                className="export-pdf-icon-button"
+                title="Export as PDF"
+              >
+                📄
+              </button>
+            )}
+          </div>
 
           {breads.length === 0 ? (
             <div className="empty-state">
