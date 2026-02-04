@@ -32,7 +32,8 @@ export async function initializeDatabase() {
     const migrations = [
       '001_create_tables.sql',
       '002_add_multiple_images.sql',
-      '003_make_all_public.sql'
+      '003_make_all_public.sql',
+      '004_add_verification.sql'
     ];
 
     for (const migration of migrations) {

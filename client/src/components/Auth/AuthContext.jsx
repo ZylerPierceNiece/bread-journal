@@ -47,8 +47,11 @@ export function AuthProvider({ children }) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Login failed');
+      const errorData = await response.json();
+      const err = new Error(errorData.error || 'Login failed');
+      err.pending = errorData.pending;
+      err.email = errorData.email;
+      throw err;
     }
 
     const data = await response.json();
@@ -70,17 +73,20 @@ export function AuthProvider({ children }) {
       throw new Error(error.error || 'Signup failed');
     }
 
-    const data = await response.json();
-    setToken(data.token);
-    setUser(data.user);
-    localStorage.setItem('token', data.token);
-    return data;
+    // Returns { pending: true, email } — token comes after verification
+    return await response.json();
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
+  };
+
+  const setAuthData = (newToken, newUser) => {
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem('token', newToken);
   };
 
   const value = {
@@ -90,6 +96,7 @@ export function AuthProvider({ children }) {
     login,
     signup,
     logout,
+    setAuthData,
     isAuthenticated: !!user
   };
 

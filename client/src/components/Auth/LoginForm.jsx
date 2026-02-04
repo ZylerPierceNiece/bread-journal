@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
+import VerifyEmailForm from './VerifyEmailForm';
 
 function LoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState(null);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  if (pendingEmail) {
+    return <VerifyEmailForm email={pendingEmail} />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,9 +23,13 @@ function LoginForm() {
 
     try {
       await login(username, password);
-      navigate('/'); // Redirect to feed after login
+      navigate('/');
     } catch (err) {
-      setError(err.message);
+      if (err.pending && err.email) {
+        setPendingEmail(err.email);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -62,6 +72,11 @@ function LoginForm() {
           </button>
         </form>
 
+        <p className="auth-footer">
+          <a href="/forgot-password" onClick={(e) => { e.preventDefault(); navigate('/forgot-password'); }}>
+            Forgot password?
+          </a>
+        </p>
         <p className="auth-footer">
           Don't have an account?{' '}
           <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>

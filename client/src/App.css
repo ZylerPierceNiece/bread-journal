@@ -650,6 +650,15 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.9rem;
 }
 
+.success-message {
+  background: #efe;
+  color: #363;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #cfc;
+  font-size: 0.9rem;
+}
+
 .auth-button {
   padding: 14px;
   background: #d4a574;

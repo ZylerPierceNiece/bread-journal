@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './components/Auth/AuthContext';
 import { ToastProvider, useToast } from './components/Toast/ToastContext';
 import LoginForm from './components/Auth/LoginForm';
 import SignupForm from './components/Auth/SignupForm';
+import ForgotPasswordForm from './components/Auth/ForgotPasswordForm';
 import BreadForm from './components/BreadForm';
 import BreadGallery from './components/BreadGallery';
 import Navbar from './components/Navbar';
@@ -79,6 +80,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginForm />} />
             <Route path="/signup" element={<SignupForm />} />
+            <Route path="/forgot-password" element={<ForgotPasswordForm />} />
             <Route
               path="/"
               element={
