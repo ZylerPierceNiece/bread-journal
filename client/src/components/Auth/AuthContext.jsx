@@ -73,8 +73,11 @@ export function AuthProvider({ children }) {
       throw new Error(error.error || 'Signup failed');
     }
 
-    // Returns { pending: true, email } — token comes after verification
-    return await response.json();
+    const data = await response.json();
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem('token', data.token);
+    return data;
   };
 
   const logout = () => {

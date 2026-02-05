@@ -73,11 +73,6 @@ function LoginForm() {
         </form>
 
         <p className="auth-footer">
-          <a href="/forgot-password" onClick={(e) => { e.preventDefault(); navigate('/forgot-password'); }}>
-            Forgot password?
-          </a>
-        </p>
-        <p className="auth-footer">
           Don't have an account?{' '}
           <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('/signup'); }}>
             Sign up

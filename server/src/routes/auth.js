@@ -56,21 +56,26 @@ router.post('/signup', async (req, res) => {
     // Hash password
     const password_hash = await bcrypt.hash(password, 10);
 
-    // Create user as unverified
-    await pool.query(
+    // Create user (verified immediately, no email verification)
+    const result = await pool.query(
       `INSERT INTO users (username, email, password_hash, display_name, verified)
-       VALUES ($1, $2, $3, $4, FALSE)`,
+       VALUES ($1, $2, $3, $4, TRUE)
+       RETURNING id, username, email, display_name`,
       [username, email, password_hash, display_name || username]
     );
 
-    // Generate verification code and send email in the background
-    const code = await createCode(email, 'email_verification');
-    sendVerificationEmail(email, code).catch(err => console.error('Email send error:', err));
+    const user = result.rows[0];
+    const token = generateToken(user.id, user.username, user.email);
 
-    // Return pending state — no token yet
     res.status(201).json({
-      pending: true,
-      email
+      message: 'User created successfully',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        display_name: user.display_name
+      }
     });
   } catch (error) {
     console.error('Signup error:', error);
@@ -273,15 +278,6 @@ router.post('/login', async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password_hash);
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid username or password' });
-    }
-
-    // Check if email is verified
-    if (!user.verified) {
-      return res.status(401).json({
-        error: 'Email not verified',
-        pending: true,
-        email: user.email
-      });
     }
 
     // Generate token

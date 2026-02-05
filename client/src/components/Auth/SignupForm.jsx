@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
-import VerifyEmailForm from './VerifyEmailForm';
 
 function SignupForm() {
   const [formData, setFormData] = useState({
@@ -13,13 +12,8 @@ function SignupForm() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState(null);
   const { signup } = useAuth();
   const navigate = useNavigate();
-
-  if (pendingEmail) {
-    return <VerifyEmailForm email={pendingEmail} />;
-  }
 
   const handleChange = (e) => {
     setFormData({
@@ -46,15 +40,13 @@ function SignupForm() {
     setLoading(true);
 
     try {
-      const data = await signup(
+      await signup(
         formData.username,
         formData.email,
         formData.password,
         formData.display_name || formData.username
       );
-      if (data.pending) {
-        setPendingEmail(data.email);
-      }
+      navigate('/');
     } catch (err) {
       setError(err.message);
     } finally {
