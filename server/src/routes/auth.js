@@ -40,7 +40,7 @@ router.post('/signup', async (req, res) => {
 
     // Check if user already exists
     const existingUser = await pool.query(
-      'SELECT * FROM users WHERE username = $1 OR email = $2',
+      'SELECT username, email FROM users WHERE username = $1 OR email = $2',
       [username, email]
     );
 
@@ -90,7 +90,7 @@ router.post('/verify', async (req, res) => {
 
     // Find the most recent unexpired code for this email
     const result = await pool.query(
-      `SELECT * FROM verification_codes
+      `SELECT code FROM verification_codes
        WHERE email = $1 AND type = 'email_verification' AND expires_at > NOW()
        ORDER BY created_at DESC LIMIT 1`,
       [email]
@@ -219,7 +219,7 @@ router.post('/reset-password', async (req, res) => {
 
     // Find the most recent unexpired reset code
     const result = await pool.query(
-      `SELECT * FROM verification_codes
+      `SELECT code FROM verification_codes
        WHERE email = $1 AND type = 'password_reset' AND expires_at > NOW()
        ORDER BY created_at DESC LIMIT 1`,
       [email]
@@ -260,7 +260,7 @@ router.post('/login', async (req, res) => {
 
     // Find user (allow login with username or email)
     const result = await pool.query(
-      'SELECT * FROM users WHERE username = $1 OR email = $1',
+      'SELECT id, username, email, password_hash, display_name, bio, profile_picture, verified FROM users WHERE username = $1 OR email = $1',
       [username]
     );
 

@@ -227,15 +227,13 @@ router.put('/:id', authenticateToken, upload.array('images', 5), async (req, res
 // DELETE bread
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM breads WHERE id = $1', [req.params.id]);
+    const result = await pool.query('SELECT user_id FROM breads WHERE id = $1', [req.params.id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Bread not found' });
     }
 
-    const bread = result.rows[0];
-
-    if (bread.user_id !== req.user.userId) {
+    if (result.rows[0].user_id !== req.user.userId) {
       return res.status(403).json({ error: 'You can only delete your own breads' });
     }
 

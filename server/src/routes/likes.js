@@ -46,7 +46,7 @@ router.delete('/:breadId/like', authenticateToken, async (req, res) => {
     const { breadId } = req.params;
 
     const result = await pool.query(
-      'DELETE FROM likes WHERE bread_id = $1 AND user_id = $2 RETURNING *',
+      'DELETE FROM likes WHERE bread_id = $1 AND user_id = $2 RETURNING id',
       [breadId, req.user.userId]
     );
 

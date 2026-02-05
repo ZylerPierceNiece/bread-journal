@@ -47,7 +47,7 @@ function FeedPage() {
   return (
     <>
       <Navbar />
-      <div className="container">
+      <div className="feed-container">
         <div className="feed-header">
           <h2>🍞 Your Bread Feed</h2>
           <p>See what your friends are baking</p>

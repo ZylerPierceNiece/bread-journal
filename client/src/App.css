@@ -1092,6 +1092,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Feed Page */
+.feed-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
 .feed-header {
   text-align: center;
   margin-bottom: 40px;
@@ -1152,9 +1158,6 @@ h1, h2, h3, h4, h5, h6 {
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  max-width: 680px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .feed-item-header {
@@ -1984,6 +1987,10 @@ h1, h2, h3, h4, h5, h6 {
     padding: 20px 15px;
   }
 
+  .feed-container {
+    padding: 20px 15px;
+  }
+
   .gallery-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
@@ -2182,6 +2189,10 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .container {
+    padding: 15px 10px;
+  }
+
+  .feed-container {
     padding: 15px 10px;
   }
 

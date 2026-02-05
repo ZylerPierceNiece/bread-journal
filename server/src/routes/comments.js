@@ -41,7 +41,7 @@ router.post('/:breadId/comments', authenticateToken, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO comments (bread_id, user_id, content)
        VALUES ($1, $2, $3)
-       RETURNING *`,
+       RETURNING id`,
       [breadId, req.user.userId, content.trim()]
     );
 
@@ -68,7 +68,7 @@ router.delete('/:breadId/comments/:commentId', authenticateToken, async (req, re
 
     // Check if comment exists and belongs to user
     const comment = await pool.query(
-      'SELECT * FROM comments WHERE id = $1',
+      'SELECT user_id FROM comments WHERE id = $1',
       [commentId]
     );
 
