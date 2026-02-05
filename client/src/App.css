@@ -1022,9 +1022,50 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Search Results */
+.search-page-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.search-page-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e0d5c5;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-page-input:focus {
+  border-color: #8b6f47;
+}
+
+.search-page-button {
+  padding: 12px 24px;
+  background: #8b6f47;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-page-button:hover {
+  background: #6b5339;
+}
+
+.loading-text {
+  color: #666;
+  font-style: italic;
+  margin: 20px 0;
+}
+
 .search-results h2 {
   color: #8b6f47;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .users-list {

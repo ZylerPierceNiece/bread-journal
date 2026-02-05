@@ -58,10 +58,7 @@ function FeedPage() {
             <h3>Your feed is empty!</h3>
             <p>Follow other bakers to see their breads here.</p>
             <button
-              onClick={() => {
-                const input = prompt('Search for users:');
-                if (input) navigate(`/search?q=${encodeURIComponent(input)}`);
-              }}
+              onClick={() => navigate('/search')}
               className="primary-button"
             >
               Find People to Follow
