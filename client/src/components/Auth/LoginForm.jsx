@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
-import VerifyEmailForm from './VerifyEmailForm';
 
 function LoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState(null);
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  if (pendingEmail) {
-    return <VerifyEmailForm email={pendingEmail} />;
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,11 +19,7 @@ function LoginForm() {
       await login(username, password);
       navigate('/');
     } catch (err) {
-      if (err.pending && err.email) {
-        setPendingEmail(err.email);
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     } finally {
       setLoading(false);
     }

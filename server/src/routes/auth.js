@@ -1,3 +1,4 @@
+// Authentication routes - email verification disabled
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import pool from '../config/database.js';

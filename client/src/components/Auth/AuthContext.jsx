@@ -47,11 +47,8 @@ export function AuthProvider({ children }) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      const err = new Error(errorData.error || 'Login failed');
-      err.pending = errorData.pending;
-      err.email = errorData.email;
-      throw err;
+      const error = await response.json();
+      throw new Error(error.error || 'Login failed');
     }
 
     const data = await response.json();
