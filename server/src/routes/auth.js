@@ -64,9 +64,9 @@ router.post('/signup', async (req, res) => {
       [username, email, password_hash, display_name || username]
     );
 
-    // Generate and send verification code
+    // Generate verification code and send email in the background
     const code = await createCode(email, 'email_verification');
-    await sendVerificationEmail(email, code);
+    sendVerificationEmail(email, code).catch(err => console.error('Email send error:', err));
 
     // Return pending state — no token yet
     res.status(201).json({
@@ -164,9 +164,9 @@ router.post('/resend', async (req, res) => {
     const code = await createCode(email, type);
 
     if (type === 'email_verification') {
-      await sendVerificationEmail(email, code);
+      sendVerificationEmail(email, code).catch(err => console.error('Email send error:', err));
     } else if (type === 'password_reset') {
-      await sendPasswordResetEmail(email, code);
+      sendPasswordResetEmail(email, code).catch(err => console.error('Email send error:', err));
     }
 
     res.json({ message: 'Code sent' });
@@ -193,7 +193,7 @@ router.post('/forgot-password', async (req, res) => {
 
     if (userResult.rows.length > 0) {
       const code = await createCode(email, 'password_reset');
-      await sendPasswordResetEmail(email, code);
+      sendPasswordResetEmail(email, code).catch(err => console.error('Email send error:', err));
     }
 
     // Always return success regardless of whether email exists
