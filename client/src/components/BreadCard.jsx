@@ -5,7 +5,7 @@ import UserAvatar from './UserAvatar';
 import WhoLikedModal from './WhoLikedModal';
 import ImageCarousel from './ImageCarousel';
 
-function BreadCard({ bread, onEdit, onDelete }) {
+function BreadCard({ bread, onEdit, onDelete, enableLightbox }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
@@ -166,6 +166,7 @@ function BreadCard({ bread, onEdit, onDelete }) {
                 ? [{ url: bread.image_url, order: 0 }]
                 : []
           }
+          enableLightbox={enableLightbox}
         />
       </div>
 
