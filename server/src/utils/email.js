@@ -1,11 +1,26 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const isDev = process.env.NODE_ENV !== 'production';
+
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 export async function sendVerificationEmail(to, code) {
-  const { data, error } = await resend.emails.send({
-    from: 'noreply@resend.dev',
-    to: [to],
+  if (isDev && !process.env.EMAIL_USER) {
+    console.log(`\n--- [DEV] Verification code for ${to}: ${code} ---\n`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: `"Bread Journal" <${process.env.EMAIL_USER}>`,
+    to,
     subject: 'Verify your Bread Journal account',
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
@@ -18,15 +33,17 @@ export async function sendVerificationEmail(to, code) {
       </div>
     `
   });
-
-  if (error) throw new Error('Failed to send verification email');
-  return data;
 }
 
 export async function sendPasswordResetEmail(to, code) {
-  const { data, error } = await resend.emails.send({
-    from: 'noreply@resend.dev',
-    to: [to],
+  if (isDev && !process.env.EMAIL_USER) {
+    console.log(`\n--- [DEV] Password reset code for ${to}: ${code} ---\n`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: `"Bread Journal" <${process.env.EMAIL_USER}>`,
+    to,
     subject: 'Reset your Bread Journal password',
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
@@ -39,7 +56,4 @@ export async function sendPasswordResetEmail(to, code) {
       </div>
     `
   });
-
-  if (error) throw new Error('Failed to send password reset email');
-  return data;
 }
