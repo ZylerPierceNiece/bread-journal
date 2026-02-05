@@ -2333,6 +2333,11 @@ h1, h2, h3, h4, h5, h6 {
   padding: 20px;
 }
 
+.bread-detail-page .bread-image {
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
 .bread-detail-header {
   display: flex;
   justify-content: space-between;
