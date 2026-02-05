@@ -14,12 +14,11 @@ function generateCode() {
 // Helper: insert a verification code into the DB
 async function createCode(email, type) {
   const code = generateCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
   await pool.query(
     `INSERT INTO verification_codes (email, code, type, expires_at)
-     VALUES ($1, $2, $3, $4)`,
-    [email, code, type, expiresAt]
+     VALUES ($1, $2, $3, NOW() + INTERVAL '10 minutes')`,
+    [email, code, type]
   );
 
   return code;
