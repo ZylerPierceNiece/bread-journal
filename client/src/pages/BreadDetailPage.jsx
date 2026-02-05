@@ -119,7 +119,6 @@ function BreadDetailPage() {
           bread={bread}
           onEdit={isOwner ? handleEdit : null}
           onDelete={isOwner ? handleDelete : null}
-          enableLightbox={true}
         />
       </div>
 
