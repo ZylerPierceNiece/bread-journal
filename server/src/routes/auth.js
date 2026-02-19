@@ -40,7 +40,7 @@ router.post('/signup', async (req, res) => {
 
     // Check if user already exists
     const existingUser = await pool.query(
-      'SELECT username, email FROM users WHERE username = $1 OR email = $2',
+      'SELECT username, email FROM users WHERE username = $1 OR LOWER(email) = LOWER($2)',
       [username, email]
     );
 
@@ -62,7 +62,7 @@ router.post('/signup', async (req, res) => {
       `INSERT INTO users (username, email, password_hash, display_name, verified)
        VALUES ($1, $2, $3, $4, TRUE)
        RETURNING id, username, email, display_name`,
-      [username, email, password_hash, display_name || username]
+      [username, email.toLowerCase(), password_hash, display_name || username]
     );
 
     const user = result.rows[0];
@@ -265,7 +265,7 @@ router.post('/login', async (req, res) => {
 
     // Find user (allow login with username or email)
     const result = await pool.query(
-      'SELECT id, username, email, password_hash, display_name, bio, profile_picture, verified FROM users WHERE username = $1 OR email = $1',
+      'SELECT id, username, email, password_hash, display_name, bio, profile_picture, verified FROM users WHERE username = $1 OR LOWER(email) = LOWER($1)',
       [username]
     );
 
